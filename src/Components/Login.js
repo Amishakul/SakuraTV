@@ -93,7 +93,7 @@ signInWithEmailAndPassword(auth, email.current.value, pass.current.value)
   }
 
   return (
-    <div className='flex justify-center mt-14'>
+    <div className='flex justify-center mt-20'>
     <div className="card bg-base-300 w-96 shadow-sm">
   <div className="card-body">
     <h2 className="card-title justify-center">{ isSignInForm ? "Login" : "SignUp"}</h2>
