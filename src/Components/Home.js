@@ -1,6 +1,7 @@
 import TrendingAnime from './Trendinganime'
 import AiringAnimeCarousel from "./AiringAnimeCarousel"
 import TrendingMovies from './TrendingMovies'
+import PopularCharacters from './PopularCharacters'
 
 
 
@@ -10,6 +11,7 @@ const Home = () => {
       <AiringAnimeCarousel />
       <TrendingAnime />
       <TrendingMovies />
+      <PopularCharacters />
 
 
       <br></br>
