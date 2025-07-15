@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ShimmerCard from './ShimmerCard';
 
 const Trendinganime = () => {
   const [animeList, setAnimeList] = useState([]);
@@ -35,7 +36,6 @@ const Trendinganime = () => {
     fetchTrendingAnime();
   }, []);
 
-  // Auto-scroll by one card width
   useEffect(() => {
     const interval = setInterval(() => {
       if (scrollRef.current && cardRef.current) {
@@ -55,11 +55,8 @@ const Trendinganime = () => {
     }
   };
 
-  if (loading) return <p className="text-center py-10">Loading trending anime...</p>;
-
   return (
     <div className="relative w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Hide scrollbar with inline style */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -70,11 +67,8 @@ const Trendinganime = () => {
         }
       `}</style>
 
-      <h2 className="text-2xl font-bold text-pink-600 mb-4 text-center">
-        📈 Trending Anime
-      </h2>
+      <h2 className="text-2xl font-bold text-pink-600 mb-4 text-center">📈 Trending Anime</h2>
 
-      {/* Scroll Arrows */}
       <button
         onClick={() => scroll('left')}
         className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-sm bg-white shadow hover:bg-pink-100"
@@ -90,41 +84,37 @@ const Trendinganime = () => {
         ❯
       </button>
 
-      {/* Scroll Container */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scroll-smooth no-scrollbar py-2"
       >
-        {animeList.map((anime, index) => (
-          <div
-            key={anime.mal_id}
-            ref={index === 0 ? cardRef : null}
-            className="
-              flex-shrink-0
-              bg-base-100 shadow-lg rounded-xl overflow-hidden
-              transition hover:scale-105
-              min-w-[150px] sm:min-w-[180px] md:min-w-[200px] lg:min-w-[220px]
-              max-w-[150px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px]
-              flex flex-col
-            "
-          >
-            <div className="w-full aspect-[2/3]">
-              <img
-                src={anime.images.jpg.large_image_url}
-                alt={anime.title_english || anime.title}
-                className="w-full h-full object-cover"
-              />
+        {loading ? (
+          <ShimmerCard count={6} type="horizontal" />
+        ) : (
+          animeList.map((anime, index) => (
+            <div
+              key={anime.mal_id}
+              ref={index === 0 ? cardRef : null}
+              className="flex-shrink-0 bg-base-100 shadow-lg rounded-xl overflow-hidden transition hover:scale-105 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] lg:min-w-[220px] max-w-[150px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] flex flex-col"
+            >
+              <div className="w-full aspect-[2/3]">
+                <img
+                  src={anime.images.jpg.large_image_url}
+                  alt={anime.title_english || anime.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-2">
+                <h3 className="text-sm font-semibold truncate">
+                  {anime.title_english || anime.title}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  ⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'}
+                </p>
+              </div>
             </div>
-            <div className="p-2">
-              <h3 className="text-sm font-semibold truncate">
-                {anime.title_english || anime.title}
-              </h3>
-              <p className="text-xs text-gray-500">
-                ⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'}
-              </p>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

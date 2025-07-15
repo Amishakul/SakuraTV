@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ShimmerCard from './ShimmerCard';
 
 const AiringAnimeCarousel = () => {
   const [animeList, setAnimeList] = useState([]);
@@ -7,14 +8,14 @@ const AiringAnimeCarousel = () => {
   const [itemsPerSlide, setItemsPerSlide] = useState(getItemsPerSlide());
 
   function getItemsPerSlide() {
-    if (window.innerWidth >= 1024) return 3; // Desktop
-    return 1; // Mobile & Tablet
+    if (window.innerWidth >= 1024) return 3;
+    return 1;
   }
 
   useEffect(() => {
     const handleResize = () => {
       setItemsPerSlide(getItemsPerSlide());
-      setCurrentIndex(0); // Reset slide on resize
+      setCurrentIndex(0);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -24,7 +25,6 @@ const AiringAnimeCarousel = () => {
     const fetchAiringAnime = async () => {
       try {
         const response = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=20');
-        if (!response.ok) throw new Error('Failed to fetch airing anime');
         const data = await response.json();
 
         const uniqueMap = new Map();
@@ -39,7 +39,7 @@ const AiringAnimeCarousel = () => {
         );
 
         const isPortrait = (imgUrl) =>
-          new Promise((resolve) => {
+          new Promise(resolve => {
             const img = new Image();
             img.src = imgUrl;
             img.onload = () => resolve(img.naturalHeight > img.naturalWidth);
@@ -81,7 +81,18 @@ const AiringAnimeCarousel = () => {
     setCurrentIndex(prev => (prev + 1) % totalSlides);
   };
 
-  if (loading) return <p className="text-center py-6">Loading airing anime...</p>;
+  if (loading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto py-10 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-6 text-center">
+          🔥 Trending Airing Anime
+        </h2>
+        <div className={`grid gap-6 ${itemsPerSlide === 3 ? 'grid-cols-3' : 'grid-cols-1'}`}>
+          <ShimmerCard count={itemsPerSlide} type="vertical" />
+        </div>
+      </div>
+    );
+  }
 
   const startIdx = currentIndex * itemsPerSlide;
   let currentSlideItems = [];
@@ -112,10 +123,7 @@ const AiringAnimeCarousel = () => {
             const genres = anime.genres?.map(g => g.name).join(', ') || 'N/A';
 
             return (
-              <div
-                key={anime.mal_id}
-                className="bg-gray-900 rounded-lg overflow-hidden shadow-lg flex flex-col"
-              >
+              <div key={anime.mal_id} className="bg-gray-900 rounded-lg overflow-hidden shadow-lg flex flex-col">
                 <div className="relative w-full h-[300px] sm:h-[400px]">
                   <img
                     src={anime.images.jpg.large_image_url}
@@ -129,12 +137,9 @@ const AiringAnimeCarousel = () => {
                     className="relative z-10 object-contain w-full h-full"
                   />
                 </div>
-
                 <div className="p-4 bg-gradient-to-t from-black/90 to-transparent text-white">
                   <h3 className="text-lg font-bold truncate">{title}</h3>
-                  <p className="text-sm mt-1">
-                    ⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'} | {anime.type}
-                  </p>
+                  <p className="text-sm mt-1">⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'} | {anime.type}</p>
                   <p className="text-sm mt-1 italic text-pink-400 truncate" title={genres}>
                     Genres: {genres}
                   </p>
@@ -144,24 +149,20 @@ const AiringAnimeCarousel = () => {
           })}
         </div>
 
-        {/* Arrows */}
         <button
           onClick={prevSlide}
           className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 transition duration-300 bg-white/70 hover:bg-pink-100 btn btn-circle"
-          aria-label="Previous Slide"
         >
           ❮
         </button>
         <button
           onClick={nextSlide}
           className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 transition duration-300 bg-white/70 hover:bg-pink-100 btn btn-circle"
-          aria-label="Next Slide"
         >
           ❯
         </button>
       </div>
 
-      {/* Slide indicators */}
       <div className="flex justify-center mt-6 space-x-2 sm:space-x-3">
         {Array.from({ length: totalSlides }).map((_, idx) => (
           <button
@@ -170,7 +171,6 @@ const AiringAnimeCarousel = () => {
               idx === currentIndex ? 'bg-pink-600 scale-125' : 'bg-gray-400'
             }`}
             onClick={() => setCurrentIndex(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
       </div>
