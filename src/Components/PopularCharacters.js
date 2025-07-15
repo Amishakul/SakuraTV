@@ -1,14 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCharacters } from '../Utils/characterSlice';
+import ShimmerCard from './ShimmerCard';
 
 const PopularCharacters = () => {
-  const [characterList, setCharacterList] = useState([]);
+  const dispatch = useDispatch();
+  const characterList = useSelector((state) => state.characters.list);
+  const isLoaded = useSelector((state) => state.characters.isLoaded);
+
   const scrollRef = useRef(null);
   const cardRef = useRef(null);
 
   useEffect(() => {
-    const fetchPopularCharacters = async () => {
+    const fetchCharacters = async () => {
       try {
-        const res = await fetch('https://api.jikan.moe/v4/top/characters?limit=10');
+        const res = await fetch('https://api.jikan.moe/v4/top/characters?limit=8');
         const data = await res.json();
 
         const seenNames = new Set();
@@ -23,31 +29,35 @@ const PopularCharacters = () => {
           if (uniqueCharacters.length === 20) break;
         }
 
-        setCharacterList(uniqueCharacters);
+        dispatch(setCharacters(uniqueCharacters));
       } catch (err) {
-        console.error('Failed to fetch popular characters:', err);
+        console.error('Failed to fetch characters:', err);
       }
     };
 
-    fetchPopularCharacters();
-  }, []);
+    if (!isLoaded) {
+      fetchCharacters();
+    }
+  }, [dispatch, isLoaded]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (scrollRef.current && cardRef.current) {
+      if (isLoaded && scrollRef.current && cardRef.current) {
         const cardWidth = cardRef.current.offsetWidth + 16;
         scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
       }
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isLoaded]);
 
   const scroll = (direction) => {
     if (scrollRef.current && cardRef.current) {
       const cardWidth = cardRef.current.offsetWidth + 16;
-      const scrollAmount = direction === 'left' ? -cardWidth : cardWidth;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -cardWidth : cardWidth,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -63,7 +73,9 @@ const PopularCharacters = () => {
         }
       `}</style>
 
-      <h2 className="text-2xl font-bold text-pink-600 mb-4 text-center">🌟 Popular Anime Characters</h2>
+      <h2 className="text-2xl font-bold text-pink-600 mb-4 text-center">
+        🌟 Popular Anime Characters
+      </h2>
 
       <button
         onClick={() => scroll('left')}
@@ -80,33 +92,32 @@ const PopularCharacters = () => {
         ❯
       </button>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth no-scrollbar py-2"
-      >
-        {characterList.map((char, index) => (
-          <div
-            key={char.mal_id}
-            ref={index === 0 ? cardRef : null}
-            className="flex-shrink-0 bg-base-100 shadow-lg rounded-xl overflow-hidden transition hover:scale-105 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] lg:min-w-[220px] max-w-[150px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] flex flex-col"
-          >
-            <div className="w-full aspect-[2/3]">
-              <img
-                src={char.images.jpg.image_url}
-                alt={char.name}
-                className="w-full h-full object-cover"
-              />
+      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scroll-smooth no-scrollbar py-2">
+        {!isLoaded ? (
+          <ShimmerCard count={8} type="horizontal" />
+        ) : (
+          characterList.map((char, index) => (
+            <div
+              key={char.mal_id}
+              ref={index === 0 ? cardRef : null}
+              className="flex-shrink-0 bg-base-100 shadow-lg rounded-xl overflow-hidden transition hover:scale-105 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] lg:min-w-[220px] max-w-[150px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] flex flex-col"
+            >
+              <div className="w-full aspect-[2/3]">
+                <img
+                  src={char.images.jpg.image_url}
+                  alt={char.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-2">
+                <h3 className="text-sm font-semibold truncate">{char.name}</h3>
+                <p className="text-xs text-gray-500 truncate">
+                  {char.about?.slice(0, 80) || 'No description'}
+                </p>
+              </div>
             </div>
-            <div className="p-2">
-              <h3 className="text-sm font-semibold truncate">
-                {char.name}
-              </h3>
-              <p className="text-xs text-gray-500 truncate">
-                {char.about?.slice(0, 80) || 'No description'}
-              </p>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
