@@ -1,9 +1,7 @@
 import TrendingAnime from './Trendinganime'
 import AiringAnimeCarousel from "./AiringAnimeCarousel"
 import TrendingMovies from './TrendingMovies'
-
-
-
+import Footer from './Footer'
 
 const Home = () => {
   return (
@@ -11,10 +9,7 @@ const Home = () => {
       <AiringAnimeCarousel />
       <TrendingAnime />
       <TrendingMovies />
-
-
-      <br></br>
-      <br></br>
+      <Footer />
     </div>
   )
 }

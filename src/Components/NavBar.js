@@ -65,10 +65,10 @@ const NavBar = () => {
             >
               <li>
                 <a className="justify-between">
-                  Profile <span className="badge badge-accent">New</span>
+                  Request Anime <span className="badge badge-accent">New</span>
                 </a>
               </li>
-              <li><a>Connections</a></li>
+              <li><a>Search Anime</a></li>
               <li>
                 <button onClick={handleSignOut} className="text-red-500 hover:text-red-700">
                   Logout

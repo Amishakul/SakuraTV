@@ -1,16 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchStart,
+  fetchSuccess,
+  fetchFailure,
+} from '../Utils/trendingMovieSlice';
 import ShimmerCard from './ShimmerCard';
 
 const TrendingMovies = () => {
-  const [movieList, setMovieList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { movieList, loading } = useSelector((state) => state.trendingMovies);
+
   const scrollRef = useRef(null);
   const cardRef = useRef(null);
 
   useEffect(() => {
     const fetchTrendingMovies = async () => {
+      // ✅ Avoid refetching if already available
+      if (movieList.length > 0) return;
+
+      dispatch(fetchStart());
       try {
-        const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=20&type=movie');
+        const res = await fetch(
+          'https://api.jikan.moe/v4/top/anime?limit=20&type=movie'
+        );
         const data = await res.json();
 
         const seenTitles = new Set();
@@ -25,16 +38,15 @@ const TrendingMovies = () => {
           if (uniqueMovies.length === 20) break;
         }
 
-        setMovieList(uniqueMovies);
+        dispatch(fetchSuccess(uniqueMovies));
       } catch (err) {
+        dispatch(fetchFailure(err.toString()));
         console.error('Failed to fetch trending anime movies:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchTrendingMovies();
-  }, []);
+  }, [dispatch, movieList]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,7 +79,9 @@ const TrendingMovies = () => {
         }
       `}</style>
 
-      <h2 className="text-2xl font-bold text-purple-600 mb-4 text-center">🎬 Top Anime Movies</h2>
+      <h2 className="text-2xl font-bold text-purple-600 mb-4 text-center">
+        🎬 Top Anime Movies
+      </h2>
 
       <button
         onClick={() => scroll('left')}
@@ -120,4 +134,4 @@ const TrendingMovies = () => {
   );
 };
 
-export default TrendingMovies;
+export default React.memo(TrendingMovies); // ✅ Memoize component

@@ -1,14 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchStart, fetchSuccess, fetchFailure } from '../Utils/trendingAnimeSlice';
 import ShimmerCard from './ShimmerCard';
 
 const Trendinganime = () => {
-  const [animeList, setAnimeList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { animeList, loading } = useSelector((state) => state.trendingAnime);
+
   const scrollRef = useRef(null);
   const cardRef = useRef(null);
 
   useEffect(() => {
     const fetchTrendingAnime = async () => {
+      if (animeList.length > 0) return; // ✅ Skip fetch if already loaded
+
+      dispatch(fetchStart());
       try {
         const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=20');
         const data = await res.json();
@@ -25,16 +31,15 @@ const Trendinganime = () => {
           if (uniqueAnime.length === 20) break;
         }
 
-        setAnimeList(uniqueAnime);
-      } catch (err) {
-        console.error('Failed to fetch trending anime:', err);
-      } finally {
-        setLoading(false);
+        dispatch(fetchSuccess(uniqueAnime));
+      } catch (error) {
+        dispatch(fetchFailure(error.toString()));
+        console.error('Failed to fetch trending anime:', error);
       }
     };
 
     fetchTrendingAnime();
-  }, []);
+  }, [dispatch, animeList]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -120,4 +125,4 @@ const Trendinganime = () => {
   );
 };
 
-export default Trendinganime;
+export default React.memo(Trendinganime); 

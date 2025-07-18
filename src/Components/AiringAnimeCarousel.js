@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchStart,
+  fetchSuccess,
+  fetchFailure,
+} from '../Utils/airingAnimeSlice';
 import ShimmerCard from './ShimmerCard';
 
 const AiringAnimeCarousel = () => {
-  const [animeList, setAnimeList] = useState([]);
+  const dispatch = useDispatch();
+  const { animeList, loading } = useSelector((state) => state.airingAnime);
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [itemsPerSlide, setItemsPerSlide] = useState(getItemsPerSlide());
 
   function getItemsPerSlide() {
-    if (window.innerWidth >= 1024) return 3;
-    return 1;
+    return window.innerWidth >= 1024 ? 3 : 1;
   }
 
   useEffect(() => {
@@ -23,23 +29,28 @@ const AiringAnimeCarousel = () => {
 
   useEffect(() => {
     const fetchAiringAnime = async () => {
+      if (animeList.length > 0) return; // ✅ Skip if already fetched
+
+      dispatch(fetchStart());
       try {
-        const response = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=20');
+        const response = await fetch(
+          'https://api.jikan.moe/v4/top/anime?filter=airing&limit=20'
+        );
         const data = await response.json();
 
         const uniqueMap = new Map();
-        data.data.forEach(item => {
+        data.data.forEach((item) => {
           if (!uniqueMap.has(item.mal_id)) {
             uniqueMap.set(item.mal_id, item);
           }
         });
 
-        const filtered = [...uniqueMap.values()].filter(anime =>
+        const filtered = [...uniqueMap.values()].filter((anime) =>
           ['TV', 'ONA', 'Movie'].includes(anime.type)
         );
 
         const isPortrait = (imgUrl) =>
-          new Promise(resolve => {
+          new Promise((resolve) => {
             const img = new Image();
             img.src = imgUrl;
             img.onload = () => resolve(img.naturalHeight > img.naturalWidth);
@@ -54,16 +65,15 @@ const AiringAnimeCarousel = () => {
           }
         }
 
-        setAnimeList(filteredPortraits);
+        dispatch(fetchSuccess(filteredPortraits));
       } catch (error) {
+        dispatch(fetchFailure(error.toString()));
         console.error('Error fetching airing anime:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchAiringAnime();
-  }, []);
+  }, [dispatch, animeList]);
 
   useEffect(() => {
     if (animeList.length === 0) return;
@@ -74,11 +84,11 @@ const AiringAnimeCarousel = () => {
   const totalSlides = Math.ceil(animeList.length / itemsPerSlide);
 
   const prevSlide = () => {
-    setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
+    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
   };
 
   const nextSlide = () => {
-    setCurrentIndex(prev => (prev + 1) % totalSlides);
+    setCurrentIndex((prev) => (prev + 1) % totalSlides);
   };
 
   if (loading) {
@@ -87,7 +97,11 @@ const AiringAnimeCarousel = () => {
         <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-6 text-center">
           🔥 Trending Airing Anime
         </h2>
-        <div className={`grid gap-6 ${itemsPerSlide === 3 ? 'grid-cols-3' : 'grid-cols-1'}`}>
+        <div
+          className={`grid gap-6 ${
+            itemsPerSlide === 3 ? 'grid-cols-3' : 'grid-cols-1'
+          }`}
+        >
           <ShimmerCard count={itemsPerSlide} type="vertical" />
         </div>
       </div>
@@ -118,12 +132,15 @@ const AiringAnimeCarousel = () => {
             itemsPerSlide === 3 ? 'grid-cols-3' : 'grid-cols-1'
           }`}
         >
-          {currentSlideItems.map(anime => {
+          {currentSlideItems.map((anime) => {
             const title = anime.title_english || anime.title;
-            const genres = anime.genres?.map(g => g.name).join(', ') || 'N/A';
+            const genres = anime.genres?.map((g) => g.name).join(', ') || 'N/A';
 
             return (
-              <div key={anime.mal_id} className="bg-gray-900 rounded-lg overflow-hidden shadow-lg flex flex-col">
+              <div
+                key={anime.mal_id}
+                className="bg-gray-900 rounded-lg overflow-hidden shadow-lg flex flex-col"
+              >
                 <div className="relative w-full h-[300px] sm:h-[400px]">
                   <img
                     src={anime.images.jpg.large_image_url}
@@ -139,8 +156,14 @@ const AiringAnimeCarousel = () => {
                 </div>
                 <div className="p-4 bg-gradient-to-t from-black/90 to-transparent text-white">
                   <h3 className="text-lg font-bold truncate">{title}</h3>
-                  <p className="text-sm mt-1">⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'} | {anime.type}</p>
-                  <p className="text-sm mt-1 italic text-pink-400 truncate" title={genres}>
+                  <p className="text-sm mt-1">
+                    ⭐ {anime.score || 'N/A'} | Ep: {anime.episodes || 'TBD'} |{' '}
+                    {anime.type}
+                  </p>
+                  <p
+                    className="text-sm mt-1 italic text-pink-400 truncate"
+                    title={genres}
+                  >
                     Genres: {genres}
                   </p>
                 </div>
@@ -178,4 +201,4 @@ const AiringAnimeCarousel = () => {
   );
 };
 
-export default AiringAnimeCarousel;
+export default React.memo(AiringAnimeCarousel); // ✅ memoized
